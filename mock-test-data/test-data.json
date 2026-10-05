@@ -1,0 +1,32 @@
+{
+  "customers": [
+    {
+      "customerId": "TEST-10001",
+      "email": "mfa-timeout-01@example.test",
+      "status": "ACTIVE",
+      "mfaEnabled": true,
+      "scenario": "mfa_timeout"
+    },
+    {
+      "customerId": "TEST-10002",
+      "email": "mfa-enrolment-01@example.test",
+      "status": "ACTIVE",
+      "mfaEnabled": false,
+      "scenario": "mfa_enrolment"
+    },
+    {
+      "customerId": "TEST-10003",
+      "email": "oauth-invalid-state-01@example.test",
+      "status": "ACTIVE",
+      "mfaEnabled": true,
+      "scenario": "oauth_invalid_state"
+    },
+    {
+      "customerId": "TEST-10004",
+      "email": "locked-account-01@example.test",
+      "status": "LOCKED",
+      "mfaEnabled": true,
+      "scenario": "account_locked"
+    }
+  ]
+}

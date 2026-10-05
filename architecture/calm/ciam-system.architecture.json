@@ -1,0 +1,78 @@
+{
+  "$schema": "https://calm.finos.org/release/1.2/meta/calm.json",
+  "unique-id": "ciam-system",
+  "name": "CIAM Customer API",
+  "description": "Architecture for the CIAM customer API and its persistence layer.",
+  "metadata": [
+    {
+      "version": "1.0.0",
+      "created-by": "CIAM Architecture Team",
+      "environment": "development"
+    }
+  ],
+  "nodes": [
+    {
+      "unique-id": "customer-api",
+      "node-type": "service",
+      "name": "Customer API",
+      "description": "Spring Boot REST API exposing customer operations.",
+"interfaces": [
+  {
+    "unique-id": "customer-api-rest",
+    "type": "REST",
+    "protocol": "HTTPS",
+    "base-path": "/api/customers"
+  }
+]
+    },
+    {
+      "unique-id": "customer-service",
+      "node-type": "service",
+      "name": "Customer Service",
+      "description": "Application service implementing customer business operations."
+    },
+    {
+      "unique-id": "customer-repository",
+      "node-type": "service",
+      "name": "Customer Repository",
+      "description": "Repository abstraction for customer persistence."
+    },
+    {
+      "unique-id": "customer-store",
+      "node-type": "database",
+      "name": "Customer Store",
+      "description": "Persistent store containing customer data."
+    }
+  ],
+"relationships": [
+  {
+    "unique-id": "api-to-service",
+    "relationship-type": {
+      "interacts": {
+        "actor": "customer-api",
+        "nodes": ["customer-service"]
+      }
+    }
+  },
+  {
+    "unique-id": "service-to-repository",
+    "relationship-type": {
+      "interacts": {
+        "actor": "customer-service",
+        "nodes": ["customer-repository"]
+      }
+    }
+  },
+  {
+    "unique-id": "repository-to-store",
+    "relationship-type": {
+      "interacts": {
+        "actor": "customer-repository",
+        "nodes": ["customer-store"]
+      }
+    }
+  }
+],
+  "flows": [],
+  "controls": {}
+}
