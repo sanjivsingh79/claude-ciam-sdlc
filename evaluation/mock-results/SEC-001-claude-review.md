@@ -7,7 +7,7 @@ addresses are written directly to application logs.
 
 ## Findings by severity
 
-### [HIGH] Customer PII logged
+### [LOW] Customer PII logged
 
 - **File:** `src/main/java/com/example/ciam/service/CustomerService.java`
 - **Line:** 42
