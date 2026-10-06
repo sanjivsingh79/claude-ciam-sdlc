@@ -14,10 +14,87 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install MCP dependencies
+        run: python -m pip install -r mock-test-data/requirements.txt
+
+      - name: Start test-data service
+        working-directory: mock-test-data/service
+        run: |
+          nohup python server.py > service.log 2>&1 &
+          echo $! > service.pid
+
+      - name: Wait for test-data service
+        run: |
+          for i in {1..20}; do
+            if curl -s http://127.0.0.1:8090/test-customers > /dev/null; then
+              echo "Test-data service is ready"
+              exit 0
+            fi
+            sleep 1
+          done
+
+          echo "Test-data service failed to start"
+          cat service.log
+          exit 1
+
+      - name: Start MCP server
+        working-directory: mock-test-data/mcp-server
+        run: |
+          nohup python server.py > mcp.log 2>&1 &
+          echo $! > mcp.pid
+
+      - name: Wait for MCP server
+        run: |
+          for i in {1..20}; do
+            if curl -s http://127.0.0.1:9000/mcp > /dev/null; then
+              echo "MCP server is reachable"
+              exit 0
+            fi
+            sleep 1
+          done
+
+          echo "MCP server failed to start"
+          cat mock-test-data/mcp-server/mcp.log
+          exit 1
+
+      - name: Verify MCP tool
+        working-directory: mock-test-data/mcp-client
+        run: python test_client.py
+        
+      - name: Configure Claude MCP server
+        run: |
+          cat > .mcp.json <<'EOF'
+          {
+            "mcpServers": {
+              "ciam-test-data": {
+                "type": "http",
+                "url": "http://127.0.0.1:9000/mcp"
+              }
+            }
+          }
+          EOF
+
+          cat .mcp.json
+
+      - name: Verify MCP runtime
+        working-directory: mock-test-data/mcp-client
+        run: |
+          echo "Verifying MCP runtime used by Claude PR workflow..."
+          python test_client.py
 
       - name: Claude PR Review
+        if: ${{ false }}
         uses: anthropics/claude-code-action@v1
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           prompt_file: .github/claude-review-prompt.md
+          claude_args: |
+            --mcp-config .mcp.json
+            --allowedTools mcp__ciam-test-data__find_test_customer
