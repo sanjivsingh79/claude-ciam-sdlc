@@ -16,11 +16,17 @@ This review does not replace deterministic CI checks such as:
 
 Review only the changes introduced by the current Pull Request.
 
-Run these project Skills:
+Before reviewing the change, explicitly read these project Skills:
 
-1. `ciam-security-review`
-2. `api-design-review`
-3. `calm-architecture-review`
+1. `.claude/skills/ciam-security-review/SKILL.md`
+2. `.claude/skills/api-design-review/SKILL.md`
+3. `.claude/skills/calm-architecture-review/SKILL.md`
+
+Use the procedures, constraints, allowed tools, and output expectations defined by those Skills.
+
+Do not skip a Skill because the change appears unrelated. Each Skill must be considered and its applicability determined from the changed files.
+
+Do not modify the Skill files.
 
 ## Rules
 
