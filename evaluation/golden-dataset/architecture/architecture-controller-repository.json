@@ -1,0 +1,17 @@
+{
+  "id": "ARCH-001",
+  "category": "architecture",
+  "scenario": "Controller directly accesses repository",
+  "description": "A controller directly injects and uses CustomerRepository instead of going through CustomerService.",
+  "code_change": {
+    "file": "src/main/java/com/example/ciam/api/CustomerController.java",
+    "before": "private final CustomerService customerService;",
+    "after": "private final CustomerService customerService;\nprivate final CustomerRepository customerRepository;"
+  },
+  "expected": {
+    "finding": true,
+    "severity": "HIGH",
+    "rule": "ARCH-CONTROLLER-REPOSITORY",
+    "expected_behavior": "Controllers must not depend directly on repositories. Repository access must go through the service layer."
+  }
+}

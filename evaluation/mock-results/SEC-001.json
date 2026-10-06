@@ -1,0 +1,5 @@
+{
+  "finding": true,
+  "severity": "HIGH",
+  "rule": "CIAM-PII-LOGGING"
+}
