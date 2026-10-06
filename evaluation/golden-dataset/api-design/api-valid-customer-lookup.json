@@ -1,0 +1,17 @@
+{
+  "id": "API-001",
+  "category": "api-design",
+  "scenario": "Valid customer lookup endpoint",
+  "description": "A GET endpoint retrieves a customer by ID through the service layer and returns 404 when the customer does not exist.",
+  "code_change": {
+    "file": "src/main/java/com/example/ciam/api/CustomerController.java",
+    "before": "No customer lookup endpoint.",
+    "after": "@GetMapping(\"/{customerId}\")\npublic ResponseEntity<Customer> getCustomer(@PathVariable UUID customerId) {\n    return customerService.findById(customerId)\n            .map(ResponseEntity::ok)\n            .orElseGet(() -> ResponseEntity.notFound().build());\n}"
+  },
+  "expected": {
+    "finding": false,
+    "severity": null,
+    "rule": null,
+    "expected_behavior": "No confirmed API design violation should be reported for this change."
+  }
+}
