@@ -4,6 +4,7 @@ import com.example.ciam.domain.Customer;
 import com.example.ciam.domain.CustomerRepository;
 import java.time.Clock;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,6 +40,10 @@ public class CustomerService {
         } else {
             log.info("Customer registration ignored: email already registered");
         }
+    }
+
+    public Optional<Customer> findById(UUID customerId) {
+        return customerRepository.findById(customerId);
     }
 
     static String normalizeEmail(String email) {

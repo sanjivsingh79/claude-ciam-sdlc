@@ -1,13 +1,14 @@
 package com.example.ciam.api;
 
+import com.example.ciam.domain.Customer;
+import com.example.ciam.domain.CustomerRepository;
 import com.example.ciam.service.CustomerService;
 import jakarta.validation.Valid;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/customers")
@@ -27,5 +28,12 @@ public class CustomerController {
     public ResponseEntity<Void> create(@Valid @RequestBody CreateCustomerRequest request) {
         customerService.register(request.toCommand());
         return ResponseEntity.accepted().build();
+    }
+
+    @GetMapping("/{customerId}")
+    public ResponseEntity<Customer> findById(@PathVariable UUID customerId) {
+        return customerService.findById(customerId)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 }

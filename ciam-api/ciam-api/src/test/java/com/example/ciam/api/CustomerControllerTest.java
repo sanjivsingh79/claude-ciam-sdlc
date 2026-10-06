@@ -2,10 +2,12 @@ package com.example.ciam.api;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.*;
+import static org.springframework.http.RequestEntity.get;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.example.ciam.domain.Customer;
 import com.example.ciam.service.CreateCustomerCommand;
 import com.example.ciam.service.CustomerService;
 import org.junit.jupiter.api.Test;
@@ -19,6 +21,10 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
 import org.springframework.test.web.servlet.assertj.MvcTestResult;
+
+import java.time.Instant;
+import java.util.Optional;
+import java.util.UUID;
 
 @WebMvcTest(CustomerController.class)
 class CustomerControllerTest {
@@ -169,5 +175,42 @@ class CustomerControllerTest {
         return """
                 {"email":"%s","givenName":"%s","familyName":"%s"}
                 """.formatted(email, givenName, familyName);
+    }
+
+    @Test
+    void shouldGetCustomerByIdWhenCustomerExists() {
+        UUID customerId = UUID.randomUUID();
+
+        Customer customer = new Customer(
+                customerId,
+                "test@example.com",
+                "John",
+                "Doe",
+                Instant.now()
+        );
+
+        when(customerService.findById(customerId))
+                .thenReturn(Optional.of(customer));
+
+        assertThat(mvc
+                .get()
+                .uri("/customers/{customerId}", customerId))
+                .hasStatusOk()
+                .bodyJson()
+                .convertTo(Customer.class)
+                .isEqualTo(customer);
+    }
+
+    @Test
+    void shouldReturnNotFoundWhenCustomerDoesNotExist() {
+        UUID customerId = UUID.randomUUID();
+
+        when(customerService.findById(customerId))
+                .thenReturn(Optional.empty());
+
+        assertThat(mvc
+                .get()
+                .uri("/customers/{customerId}", customerId))
+                .hasStatus(404);
     }
 }

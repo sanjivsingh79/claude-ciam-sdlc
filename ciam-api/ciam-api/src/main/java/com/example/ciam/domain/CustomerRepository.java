@@ -1,6 +1,7 @@
 package com.example.ciam.domain;
 
 import java.util.Optional;
+import java.util.UUID;
 
 public interface CustomerRepository {
 
@@ -13,4 +14,6 @@ public interface CustomerRepository {
     boolean saveIfEmailUnique(Customer customer);
 
     Optional<Customer> findByEmail(String normalizedEmail);
+
+    Optional<Customer> findById(UUID customerId);
 }
