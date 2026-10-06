@@ -58,4 +58,22 @@ jobs:
           python-version: '3.12'
 
       - name: Validate golden evaluation dataset
-        run: python evaluation/validate_dataset.py        
+        run: python evaluation/validate_dataset.py
+
+  ai-evaluation:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Adapt Claude review
+        run: python evaluation/adapt_claude_review.py SEC-001
+
+      - name: Evaluate Claude review
+        run: python evaluation/evaluate_results.py SEC-001
