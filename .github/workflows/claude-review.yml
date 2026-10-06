@@ -84,7 +84,7 @@ jobs:
           cat .mcp.json
 
       - name: Verify MCP runtime
-        working-directory: mock-test-data/mcp-client
+        working-directory: mock-test-data/mcp-server
         run: |
           echo "Verifying MCP runtime used by Claude PR workflow..."
           python test_client.py
