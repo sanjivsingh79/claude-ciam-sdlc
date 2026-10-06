@@ -43,7 +43,7 @@ jobs:
           node-version: '22'
 
       - name: Install FINOS CALM CLI
-        run: npm install -g @finos/calm
+        run: npm install -g @finos/calm-cli
 
       - name: Validate CALM architecture
         run: calm validate -a ./architecture/calm/ciam-system.architecture.json
