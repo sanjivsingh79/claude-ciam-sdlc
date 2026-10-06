@@ -65,7 +65,7 @@ jobs:
           exit 1
 
       - name: Verify MCP tool
-        working-directory: mock-test-data/mcp-client
+        working-directory: mock-test-data/mcp-server
         run: python test_client.py
         
       - name: Configure Claude MCP server
