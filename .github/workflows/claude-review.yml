@@ -5,6 +5,7 @@ on:
 
 jobs:
   claude-review:
+    if: github.actor == 'sanjivsingh79'
     runs-on: ubuntu-latest
 
     permissions:
