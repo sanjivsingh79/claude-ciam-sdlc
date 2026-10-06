@@ -15,7 +15,6 @@ import java.util.UUID;
 public class CustomerController {
 
     private final CustomerService customerService;
-    private  CustomerRepository customerRepository;
     public CustomerController(CustomerService customerService) {
         this.customerService = customerService;
     }
