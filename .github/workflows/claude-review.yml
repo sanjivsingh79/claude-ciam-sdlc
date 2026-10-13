@@ -30,6 +30,16 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Setup Node.js for CALM CLI
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install FINOS CALM CLI
+        run: |
+          npm install --global @finos/calm-cli@1.60.1
+          calm --version
+
       - name: Install MCP dependencies
         run: python -m pip install -r mock-test-data/requirements.txt
 
@@ -116,4 +126,4 @@ jobs:
           claude_args: |
             --max-turns 10
             --mcp-config .mcp.json
-            --allowedTools "Read,Glob,Grep,Bash(git diff:*),Bash(git log:*),Bash(git status:*),mcp__github__*,mcp__ciam-test-data__find_test_customer"
+            --allowedTools "Read,Glob,Grep,Bash(git diff:*),Bash(git log:*),Bash(git status:*),Bash(git show:*),Bash(git ls-files:*),Bash(git rev-parse:*),Bash(calm validate:*),mcp__github__*,mcp__ciam-test-data__find_test_customer"
