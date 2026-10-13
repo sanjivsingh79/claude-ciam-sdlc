@@ -37,24 +37,55 @@ def evaluate(case_id, result_file=None):
     result = load_json(result_path)
     expected = golden["expected"]
     findings = result.get("findings", [])
+    expected_finding = expected["finding"]
 
-    # Select the finding matching the expected rule rather than
-    # assuming the first finding is the relevant one.
+    print(f"\nEvaluation: {case_id}")
+    print(f"Result source: {result_path}")
+
+    if not expected_finding:
+        # Negative case: no confirmed finding should be reported.
+        confirmed_findings = [
+            item for item in findings
+            if item.get("finding") is True
+        ]
+
+        passed = len(confirmed_findings) == 0
+        print(
+            "  false_positive_check: "
+            f"{'PASS' if passed else 'FAIL'}"
+        )
+
+        if confirmed_findings:
+            print("  Unexpected findings:")
+            for item in confirmed_findings:
+                print(
+                    f"    [{item.get('severity')}] "
+                    f"{item.get('title', '(untitled)')} "
+                    f"-> {item.get('rule')}"
+                )
+
+        print(f"Overall: {'PASS' if passed else 'FAIL'}")
+        if not passed:
+            raise SystemExit(1)
+        return
+
+    # Positive case: locate the finding matching the expected rule.
     actual = next(
         (
             item for item in findings
             if item.get("rule") == expected["rule"]
+            and item.get("finding") is True
         ),
         None,
     )
-
-    print(f"\nEvaluation: {case_id}")
-    print(f"Result source: {result_path}")
 
     if actual is None:
         print("  finding: FAIL - expected rule not found")
         print(f"  severity: FAIL - expected {expected['severity']}")
         print(f"  rule: FAIL - expected {expected['rule']}")
+        print("  evidence_present: FAIL")
+        print("  recommendation_present: FAIL")
+        print("Overall: FAIL")
         raise SystemExit(1)
 
     checks = {
@@ -71,7 +102,7 @@ def evaluate(case_id, result_file=None):
     if "real-results" in result_path.parts:
         print(
             "\nNote: this is a related real-PR scenario, not an exact "
-            "match for the SEC-001 code change."
+            f"match for the {case_id} code change."
         )
 
     if not all(checks.values()):
