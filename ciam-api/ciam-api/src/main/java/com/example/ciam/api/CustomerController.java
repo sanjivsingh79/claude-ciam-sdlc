@@ -15,23 +15,33 @@ import java.util.UUID;
 public class CustomerController {
 
     private final CustomerService customerService;
-    public CustomerController(CustomerService customerService) {
+    private final CustomerRepository customerRepository;
+
+    public CustomerController(
+            CustomerService customerService,
+            CustomerRepository customerRepository) {
         this.customerService = customerService;
+        this.customerRepository = customerRepository;
     }
 
-    /**
-     * Always answers 202 Accepted with no body, whether or not the email was already
-     * registered, so the response does not reveal account existence.
-     */
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Void> create(@Valid @RequestBody CreateCustomerRequest request) {
+        System.out.println("Registering customer email: " + request.email());
         customerService.register(request.toCommand());
         return ResponseEntity.accepted().build();
     }
 
     @GetMapping("/{customerId}")
     public ResponseEntity<Customer> findById(@PathVariable UUID customerId) {
-        return customerService.findById(customerId)
+        return customerRepository.findById(customerId)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    // TEST ONLY: deliberately exposes the domain object at the API boundary.
+    @GetMapping("/test-exposure/{customerId}")
+    public ResponseEntity<Customer> testExposure(@PathVariable UUID customerId) {
+        return customerRepository.findById(customerId)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
