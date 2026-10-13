@@ -170,13 +170,21 @@ jobs:
                                       if isinstance(command, str) and command.strip():
                                           parts = command.strip().split()
                                           if parts[0] == "git" and len(parts) > 1:
-                                              denial["command_summary"] = "git " + parts[1]
+                                              if parts[1] in {
+                                                  "status", "diff", "log", "show",
+                                                  "ls-files", "rev-parse"
+                                              }:
+                                                  denial["command_summary"] = "git " + parts[1]
+                                              else:
+                                                  denial["command_summary"] = "git (other command)"
                                           elif parts[0] == "calm" and len(parts) > 1:
-                                              denial["command_summary"] = "calm " + parts[1]
+                                              if parts[1] == "validate":
+                                                  denial["command_summary"] = "calm validate"
+                                              else:
+                                                  denial["command_summary"] = "calm (other command)"
                                           else:
-                                              denial["command_summary"] = parts[0]
+                                              denial["command_summary"] = "other executable"
                                           break
-
                               summary["permission_denials"].append(denial)
                       else:
                           collect_denials(value)
