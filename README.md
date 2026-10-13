@@ -1,4 +1,4 @@
-# Claude Code CIAM Software Engineering POC
+# Claude Code CIAM Software Engineering
 
 A hands-on proof of concept demonstrating how **Claude Code and AI-assisted software engineering** can be integrated into a Java/Spring Boot CIAM development lifecycle with architecture governance, security controls, reusable Skills, specialist agents, MCP tools, deterministic quality gates, Git/GitHub workflows, and AI evaluation.
 
