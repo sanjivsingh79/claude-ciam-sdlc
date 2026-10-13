@@ -219,7 +219,7 @@ jobs:
               return comments
 
           review = None
-          for attempt in range(10):
+          for attempt in range(30):
               comments = get_comments()
               candidates = [
                   comment for comment in comments
@@ -230,8 +230,8 @@ jobs:
               if candidates:
                   review = max(candidates, key=lambda item: item["id"])
                   break
-              if attempt < 9:
-                  time.sleep(2)
+              if attempt < 29:
+                  time.sleep(5)
 
           if review is None:
               raise SystemExit(
