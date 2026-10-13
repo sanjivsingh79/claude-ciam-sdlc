@@ -125,7 +125,7 @@ jobs:
             and severity. If no confirmed issues are found, say so.
 
           claude_args: |
-            --max-turns 10
+            --max-turns 15
             --mcp-config .mcp.json
             --allowedTools "Read,Glob,Grep,Bash(git diff:*),Bash(git log:*),Bash(git status:*),Bash(git show:*),Bash(git ls-files:*),Bash(git rev-parse:*),Bash(calm validate:*),mcp__github__*,mcp__ciam-test-data__find_test_customer"
 
