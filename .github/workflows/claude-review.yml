@@ -153,11 +153,31 @@ jobs:
                   for key, value in obj.items():
                       if key == "permission_denials" and isinstance(value, list):
                           for item in value:
-                              if isinstance(item, dict):
-                                  summary["permission_denials"].append({
-                                      "tool_name": item.get("tool_name") or item.get("tool"),
-                                      "reason": item.get("reason")
-                                  })
+                              if not isinstance(item, dict):
+                                  continue
+
+                              denial = {
+                                  "tool_name": item.get("tool_name") or item.get("tool"),
+                                  "reason": item.get("reason"),
+                                  "field_names": sorted(str(k) for k in item.keys())
+                              }
+
+                              # Extract only the command category, never its arguments.
+                              for input_key in ("tool_input", "input"):
+                                  tool_input = item.get(input_key)
+                                  if isinstance(tool_input, dict):
+                                      command = tool_input.get("command")
+                                      if isinstance(command, str) and command.strip():
+                                          parts = command.strip().split()
+                                          if parts[0] == "git" and len(parts) > 1:
+                                              denial["command_summary"] = "git " + parts[1]
+                                          elif parts[0] == "calm" and len(parts) > 1:
+                                              denial["command_summary"] = "calm " + parts[1]
+                                          else:
+                                              denial["command_summary"] = parts[0]
+                                          break
+
+                              summary["permission_denials"].append(denial)
                       else:
                           collect_denials(value)
               elif isinstance(obj, list):
