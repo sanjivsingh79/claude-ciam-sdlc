@@ -99,6 +99,7 @@ jobs:
           EOF
 
       - name: Claude PR Review
+        id: claude_review
         uses: anthropics/claude-code-action@v1
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
@@ -127,3 +128,101 @@ jobs:
             --max-turns 10
             --mcp-config .mcp.json
             --allowedTools "Read,Glob,Grep,Bash(git diff:*),Bash(git log:*),Bash(git status:*),Bash(git show:*),Bash(git ls-files:*),Bash(git rev-parse:*),Bash(calm validate:*),mcp__github__*,mcp__ciam-test-data__find_test_customer"
+
+      - name: Create sanitized Claude diagnostics
+        if: always()
+        env:
+          EXECUTION_FILE: ${{ steps.claude_review.outputs.execution_file }}
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          source = Path(os.environ.get("EXECUTION_FILE", ""))
+          target = Path(os.environ["RUNNER_TEMP"]) / "claude-diagnostics.json"
+
+          summary = {
+              "execution_file_found": source.is_file(),
+              "events": [],
+              "permission_denials": []
+          }
+
+          def collect_denials(obj):
+              if isinstance(obj, dict):
+                  for key, value in obj.items():
+                      if key == "permission_denials" and isinstance(value, list):
+                          for item in value:
+                              if isinstance(item, dict):
+                                  summary["permission_denials"].append({
+                                      "tool_name": item.get("tool_name") or item.get("tool"),
+                                      "reason": item.get("reason")
+                                  })
+                      else:
+                          collect_denials(value)
+              elif isinstance(obj, list):
+                  for item in obj:
+                      collect_denials(item)
+
+          if source.is_file():
+              try:
+                  raw = source.read_text(encoding="utf-8")
+                  try:
+                      data = json.loads(raw)
+                  except json.JSONDecodeError:
+                      data = [
+                          json.loads(line)
+                          for line in raw.splitlines()
+                          if line.strip()
+                      ]
+                  collect_denials(data)
+                  entries = data if isinstance(data, list) else [data]
+
+                  for entry in entries:
+                      if not isinstance(entry, dict):
+                          continue
+
+                      event = {
+                          key: entry[key]
+                          for key in (
+                              "type", "subtype", "stop_reason",
+                              "num_turns", "is_error", "conclusion",
+                              "total_cost_usd"
+                          )
+                          if key in entry
+                      }
+
+                      message = entry.get("message")
+                      if isinstance(message, dict):
+                          content = message.get("content", [])
+                          if isinstance(content, list):
+                              names = [
+                                  block["name"]
+                                  for block in content
+                                  if isinstance(block, dict)
+                                  and block.get("type") == "tool_use"
+                                  and block.get("name")
+                              ]
+                              if names:
+                                  event["tools"] = names
+
+                      if event:
+                          summary["events"].append(event)
+
+              except Exception as exc:
+                  summary["parse_error_type"] = type(exc).__name__
+          else:
+              summary["note"] = "Claude execution file was not available."
+
+          target.write_text(json.dumps(summary, indent=2), encoding="utf-8")
+          print(json.dumps(summary, indent=2))
+          PY
+
+      - name: Upload sanitized Claude diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: claude-review-diagnostics
+          path: ${{ runner.temp }}/claude-diagnostics.json
+          if-no-files-found: warn
+          retention-days: 3
