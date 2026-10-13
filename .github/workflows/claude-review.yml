@@ -175,6 +175,8 @@ jobs:
             --allowedTools "Read,Glob,Grep,Bash(git diff:*),Bash(git log:*),Bash(git status:*),Bash(git show:*),Bash(git ls-files:*),Bash(git rev-parse:*),Bash(calm validate:*),mcp__github__*,mcp__ciam-test-data__find_test_customer"
 
       - name: Capture new Claude review comment
+        id: capture_review
+        if: always()
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPOSITORY: ${{ github.repository }}
@@ -253,6 +255,8 @@ jobs:
           PY
 
       - name: Adapt captured Claude review
+        id: adapt_review
+        if: always() && steps.capture_review.outcome == 'success'
         env:
           REVIEW_MARKDOWN_PATH: ${{ runner.temp }}/claude-review.md
         run: |
@@ -267,7 +271,7 @@ jobs:
              "$RUNNER_TEMP/claude-review-results/PR-${{ inputs.pr_number }}-adapted.json"
 
       - name: Evaluate matching PII finding
-        if: success()
+        if: always() && steps.capture_review.outcome == 'success' && steps.adapt_review.outcome == 'success'
         env:
           PR_NUMBER: ${{ inputs.pr_number }}
         run: |
