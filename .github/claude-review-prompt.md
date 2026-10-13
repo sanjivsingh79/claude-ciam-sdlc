@@ -82,3 +82,18 @@ Then provide:
 If no confirmed issues are found, explicitly state:
 
 `No confirmed issues found.`
+## Mandatory CALM Architecture Evidence
+
+When applying `.claude/skills/calm-architecture-review/SKILL.md`:
+
+1. Read `architecture/calm/ciam-system.architecture.json` directly. Do not infer its contents from `CLAUDE.md`, previous reviews, or validation output.
+2. Run `calm validate -a architecture/calm/ciam-system.architecture.json` using the permitted tool.
+3. Inspect the implementation changes and compare relevant dependencies with the nodes and relationships defined in that exact architecture file.
+4. In the review comment, include an **Architecture Evidence** subsection that states:
+   - The exact architecture file path inspected.
+   - The CALM validation result, including any errors or warnings reported.
+   - The relevant architecture nodes and relationships checked against the changed implementation.
+   - Any confirmed violations, or explicitly state that no confirmed violations were found.
+5. Report only checks actually performed. If the file could not be read, validation could not run, or evidence is insufficient, state that limitation explicitly. Never claim a check passed without observing its result.
+
+A successful CALM validation confirms that the model passes the validator; it does not, by itself, prove that the implementation conforms to the model.
