@@ -181,7 +181,6 @@ jobs:
                   for entry in entries:
                       if not isinstance(entry, dict):
                           continue
-
                       event = {
                           key: entry[key]
                           for key in (
@@ -192,6 +191,23 @@ jobs:
                           if key in entry
                       }
 
+                      if entry.get("subtype") == "permission_denied":
+                          safe_fields = (
+                              "tool_name", "tool", "reason",
+                              "permission", "decision"
+                          )
+                          for key in safe_fields:
+                              value = entry.get(key)
+                              if isinstance(value, (str, int, float, bool)):
+                                  event[key] = value
+
+                          # Record field names only for nested structures.
+                          for key in ("tool_input", "input", "error"):
+                              value = entry.get(key)
+                              if isinstance(value, dict):
+                                  event[f"{key}_field_names"] = sorted(
+                                      str(name) for name in value.keys()
+                                  )
                       message = entry.get("message")
                       if isinstance(message, dict):
                           content = message.get("content", [])
