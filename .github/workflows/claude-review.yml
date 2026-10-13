@@ -116,7 +116,7 @@ jobs:
             approve, or merge code. Post one concise review summary to
             the specified pull request, including evidence-backed findings
             and severity. If no confirmed issues are found, say so.
-        claude_args: |
-          --max-turns 6
-          --mcp-config .mcp.json
-          --allowedTools "Read,Glob,Grep,mcp__github__*,mcp__ciam-test-data__find_test_customer"
+          claude_args: |
+            --max-turns 6
+            --mcp-config .mcp.json
+            --allowedTools "Read,Glob,Grep,mcp__github__*,mcp__ciam-test-data__find_test_customer"
