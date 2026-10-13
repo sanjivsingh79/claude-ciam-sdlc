@@ -42,7 +42,7 @@ jobs:
       - name: Wait for test-data service
         run: |
           for i in {1..20}; do
-            if curl -fsS http://127.0.0.1:8090/test-customers > /dev/null; then
+            if curl -fsS --max-time 2 http://127.0.0.1:8090/test-customers > /dev/null; then
               echo "Test-data service is ready"
               exit 0
             fi
@@ -53,28 +53,27 @@ jobs:
           cat mock-test-data/service/service.log
           exit 1
 
-
       - name: Start MCP server
         working-directory: mock-test-data/mcp-server
         run: |
           nohup python server.py > mcp.log 2>&1 &
           echo $! > mcp.pid
 
-      - name: Wait for MCP tool
-        working-directory: mock-test-data/mcp-server
+      - name: Wait for MCP server
         run: |
           for i in {1..20}; do
-            if python test_client.py; then
-              echo "MCP tool is ready"
-              exit 0
+            if curl -s --max-time 2 http://127.0.0.1:9000/mcp > /dev/null; then
+              echo "MCP server is reachable"
+              break
             fi
             sleep 1
           done
 
-          echo "MCP tool failed to become ready"
-          cat mcp.log
-          exit 1
-
+          if ! python mock-test-data/mcp-server/test_client.py; then
+            echo "MCP tool verification failed"
+            cat mock-test-data/mcp-server/mcp.log
+            exit 1
+          fi
 
       - name: Configure Claude MCP server
         run: |
@@ -89,11 +88,8 @@ jobs:
           }
           EOF
 
-
       - name: Claude PR Review
         uses: anthropics/claude-code-action@v1
-        env:
-          GH_TOKEN: ${{ github.token }}
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           prompt: |
@@ -116,7 +112,8 @@ jobs:
             approve, or merge code. Post one concise review summary to
             the specified pull request, including evidence-backed findings
             and severity. If no confirmed issues are found, say so.
+
           claude_args: |
-            --max-turns 6
+            --max-turns 10
             --mcp-config .mcp.json
-            --allowedTools "Read,Glob,Grep,mcp__github__*,mcp__ciam-test-data__find_test_customer"
+            --allowedTools "Read,Glob,Grep,Bash(git diff:*),Bash(git log:*),Bash(git status:*),mcp__github__*,mcp__ciam-test-data__find_test_customer"
