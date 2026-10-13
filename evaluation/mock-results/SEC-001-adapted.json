@@ -1,9 +1,13 @@
 {
+  "source": "C:\\Users\\sanji\\claude-ciam-sdlc\\evaluation\\mock-results\\SEC-001-claude-review.md",
   "findings": [
     {
       "finding": true,
       "severity": "HIGH",
-      "rule": "CIAM-PII-LOGGING"
+      "title": "Customer PII logged",
+      "rule": "CIAM-PII-LOGGING",
+      "evidence": "`customer.getEmail()` is written directly to the application log.",
+      "recommendation": "Remove the email address from the log message or use an approved non-sensitive identifier."
     }
   ]
 }
