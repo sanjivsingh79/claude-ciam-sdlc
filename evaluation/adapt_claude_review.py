@@ -92,7 +92,7 @@ def adapt(case_id, source_path=None):
 
 def extract_evidence(body):
     match = re.search(
-        r"\*\*Evidence:\*\*\s*(.*?)(?=\n\s*\*\*Expected:|\Z)",
+        r"\*\*Evidence:\*\*\s*(.*?)(?=\n\s*(?:-\s*)?\*\*Expected:|\Z)",
         body,
         re.DOTALL,
     )

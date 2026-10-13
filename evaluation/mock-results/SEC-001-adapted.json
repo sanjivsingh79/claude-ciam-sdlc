@@ -6,7 +6,7 @@
       "severity": "HIGH",
       "title": "Customer PII logged",
       "rule": "CIAM-PII-LOGGING",
-      "evidence": "`customer.getEmail()` is written directly to the application log.\n- **Expected:** Customer email addresses must not be written directly to logs.\n- **Recommendation:** Remove the email address from the log message or use an approved non-sensitive identifier.",
+      "evidence": "`customer.getEmail()` is written directly to the application log.",
       "recommendation": "Remove the email address from the log message or use an approved non-sensitive identifier."
     }
   ]
