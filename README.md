@@ -1,1839 +1,667 @@
-# Claude Code CIAM Software Engineering
+# Claude CIAM SDLC — AI-Assisted Software Engineering with Architecture Guardrails
 
-A hands-on proof of concept demonstrating how **Claude Code and AI-assisted software engineering** can be integrated into a Java/Spring Boot CIAM development lifecycle with architecture governance, security controls, reusable Skills, specialist agents, MCP tools, deterministic quality gates, Git/GitHub workflows, and AI evaluation.
-
-The goal is not simply to demonstrate "Claude can write code".
-
-The goal is to demonstrate how an enterprise can build a **controlled AI-enabled software engineering platform** around Claude.
-
----
-
-## 1. What this project demonstrates
-
-This repository demonstrates an AI-assisted CIAM software engineering lifecycle:
-
-```text
-CIAM Requirement
-       │
-       ▼
-Developer + Claude Code
-       │
-       ├── CLAUDE.md project instructions
-       ├── User-level instructions
-       ├── Skills
-       ├── Subagents
-       ├── Hooks
-       └── MCP tools
-       │
-       ▼
-Understand existing code
-       │
-       ▼
-Implement change
-       │
-       ▼
-Run tests
-       │
-       ├── JUnit
-       ├── ArchUnit
-       └── Architecture validation
-       │
-       ▼
-Security / API / Architecture review
-       │
-       ▼
-Git commit
-       │
-       ▼
-Pull Request
-       │
-       ├── Automated CI
-       ├── Deterministic architecture gates
-       ├── Evaluation dataset validation
-       └── AI-assisted semantic review
-       │
-       ▼
-Quality gates
-       │
-       ▼
-Deployment
-```
-
-The key principle demonstrated throughout the project is:
-
-> **Use AI for reasoning and assistance, but use deterministic controls to enforce security and architecture boundaries.**
-
----
-
-# 2. Technology stack
-
-## Application
-
-* Java 21
-* Spring Boot 4
-* Spring MVC
-* Gradle
-* JUnit 5
-* Bean Validation
-* Spring Boot Actuator
-* Embedded Tomcat
-
-## AI / Developer tooling
-
-* Claude Code
-* Claude Code Skills
-* Claude Code Subagents
-* `CLAUDE.md`
-* Claude Code Hooks
-* MCP
-* MCP Streamable HTTP
-* Anthropic Claude Code GitHub Action
-
-## Architecture / quality
-
-* FINOS CALM
-* ArchUnit
-* Git
-* GitHub
-* GitHub Actions
-
-## Evaluation
-
-* Python
-* JSON-based golden evaluation datasets
-* Deterministic evaluation scripts
-* Mock Claude review results
-
----
-
-# 3. Repository structure
-
-The important parts of the repository are:
-
-```text
-claude-ciam-sdlc/
-│
-├── ciam-api/
-│   └── ciam-api/
-│       ├── src/
-│       │   ├── main/
-│       │   │   └── java/
-│       │   │       └── com/example/ciam/
-│       │   │           ├── api/
-│       │   │           ├── service/
-│       │   │           ├── domain/
-│       │   │           └── infrastructure/
-│       │   └── test/
-│       ├── build.gradle
-│       ├── settings.gradle
-│       └── gradlew
-│
-├── .claude/
-│   ├── hooks/
-│   │   └── block-git-push.js
-│   │
-│   ├── skills/
-│   │   ├── ciam-security-review/
-│   │   │   └── SKILL.md
-│   │   ├── api-design-review/
-│   │   │   └── SKILL.md
-│   │   └── calm-architecture-review/
-│   │       └── SKILL.md
-│   │
-│   └── settings.json
-│
-├── architecture/
-│   └── calm/
-│       └── ciam-system.architecture.json
-│
-├── evaluation/
-│   ├── golden-dataset/
-│   │   ├── security/
-│   │   ├── architecture/
-│   │   └── api-design/
-│   ├── proposed/
-│   ├── mock-results/
-│   ├── schemas/
-│   ├── README.md
-│   ├── validate_dataset.py
-│   ├── adapt_claude_review.py
-│   └── evaluate_results.py
-│
-├── mock-test-data/
-│   ├── service/
-│   ├── mcp-server/
-│   ├── mcp-client/
-│   ├── test-data.json
-│   └── requirements.txt
-│
-├── .github/
-│   ├── workflows/
-│   │   ├── ci.yml
-│   │   └── claude-review.yml
-│   └── claude-review-prompt.md
-│
-└── CLAUDE.md
-```
-
----
-
-# 4. CIAM application architecture
-
-The sample application is intentionally simple so that the AI engineering and governance concepts remain visible.
-
-The application follows:
-
-```text
-                 REST API
-                    │
-                    ▼
-             CustomerController
-                    │
-                    ▼
-             CustomerService
-                    │
-                    ▼
-          CustomerRepository
-                    │
-                    ▼
-        InMemoryCustomerRepository
-                    │
-                    ▼
-             Customer Store
-```
-
-The logical architecture is also represented as **FINOS CALM architecture-as-code**.
-
-The CALM model defines:
-
-```text
-customer-api
-      │
-      ▼
-customer-service
-      │
-      ▼
-customer-repository
-      │
-      ▼
-customer-store
-```
-
-This gives us two complementary forms of architecture governance:
-
-### Runtime/code architecture
-
-ArchUnit verifies implementation rules.
-
-Example:
-
-```text
-Controller
-   │
-   ├── allowed → Service
-   │
-   └── forbidden → Repository
-```
-
-### Architecture-as-code
-
-FINOS CALM describes the intended architecture independently of the Java implementation.
-
-```text
-CALM model
-     +
-ArchUnit
-     +
-Code review
-```
-
-This provides a useful defence-in-depth architecture model.
-
----
-
-# 5. CIAM security principles
-
-The application demonstrates several CIAM-specific security requirements.
-
-Examples include:
-
-* Do not log passwords.
-* Do not log tokens.
-* Do not log OTPs.
-* Do not expose unnecessary PII.
-* Do not reveal whether a customer account exists through different error responses.
-* Use DTOs at API boundaries.
-* Do not expose persistence entities directly.
-* Validate input.
-* Return controlled error responses.
-* Avoid leaking implementation details.
-* Security-sensitive changes require explicit review.
-
-The project-level `CLAUDE.md` communicates these rules to Claude Code.
-
-However:
-
-> `CLAUDE.md` is an instruction mechanism, not a security boundary.
-
-A developer or AI agent must not be able to bypass actual security controls merely by changing an instruction file.
-
----
-
-# 6. CLAUDE.md
-
-The root `CLAUDE.md` provides project-level instructions covering:
-
-* Technology stack
-* Architecture
-* Layering
-* CIAM security rules
-* Development rules
-* Protected changes
-* Git behaviour
-
-For example:
-
-```text
-Controllers must not access repositories directly.
-
-Use DTOs at API boundaries.
-
-Never log passwords, tokens, OTPs or full PII.
-
-Run tests after implementation changes.
-
-Ask before modifying:
-- dependency versions
-- security configuration
-- database schema
-- public API contracts
-- Git configuration
-
-Never push to Git.
-```
-
-This demonstrates how project-specific engineering context can be supplied to Claude Code without repeatedly putting it into every prompt.
-
----
-
-# 7. User-level Claude Code instructions
-
-The project also demonstrates the difference between **user-level instructions** and **project-level instructions**.
-
-The user-level configuration can contain personal preferences and delegation rules.
-
-Example:
-
-```text
-For CIAM test-data selection tasks,
-delegate to the test-data-agent.
-```
-
-This was deliberately tested by removing the equivalent project-level rule.
-
-The experiment demonstrated that the user-level instruction was sufficient to influence Claude Code's delegation behaviour.
-
-This is useful for understanding the scope hierarchy:
-
-```text
-Enterprise / managed policies
-          │
-          ▼
-User-level configuration
-          │
-          ▼
-Project CLAUDE.md
-          │
-          ▼
-Skills
-          │
-          ▼
-Subagents
-          │
-          ▼
-Hooks
-```
-
-The exact precedence and enforcement model depends on the Claude Code configuration and enterprise deployment model.
-
----
-
-# 8. Claude Code Skills
-
-The repository contains three custom review Skills.
-
-## Security review
-
-```text
-.claude/skills/ciam-security-review/SKILL.md
-```
-
-A read-only CIAM security review.
-
-It examines areas such as:
-
-* Authentication
-* Authorization
-* Account enumeration
-* PII
-* Secrets
-* Logging
-* Validation
-* Error handling
-* CORS/CSRF
-* Rate limiting
-* Actuator exposure
-* Dependency concerns
-* OWASP API risks
-
-The Skill is explicitly read-only.
-
-It must not modify the application.
-
----
-
-## API design review
-
-```text
-.claude/skills/api-design-review/SKILL.md
-```
-
-Checks:
-
-* HTTP methods
-* Resource design
-* Status codes
-* DTOs
-* Validation
-* Error responses
-* Pagination
-* Filtering
-* Sorting
-* Idempotency
-* Breaking changes
-* API consistency
-* PII exposure
-* Versioning
-* Tests
-
----
-
-## CALM architecture review
-
-```text
-.claude/skills/calm-architecture-review/SKILL.md
-```
-
-Checks implementation against the authoritative FINOS CALM architecture model.
-
-The Skill:
-
-1. Validates the CALM model.
-2. Inspects the implementation.
-3. Maps implementation components to CALM nodes.
-4. Checks forbidden dependencies.
-5. Detects architecture drift.
-
-For example:
-
-```text
-CustomerController
-       │
-       ├── CustomerService     ✓
-       │
-       └── CustomerRepository  ✗
-```
-
----
-
-# 9. Skill vs Subagent
-
-This repository demonstrates an important distinction:
-
-```text
-Subagent = WHO should perform the work?
-
-Skill = HOW should the work be performed?
-```
-
-Example:
-
-```text
-Main Claude Agent
-       │
-       ├── Security Subagent
-       │       │
-       │       └── Security Review Skill
-       │
-       ├── API Review Subagent
-       │       │
-       │       └── API Design Skill
-       │
-       └── Test Data Subagent
-               │
-               └── Test Data Selection Skill
-```
-
-A Skill can therefore be reused by different agents.
-
----
-
-# 10. MCP integration
-
-The repository contains a complete local MCP demonstration.
-
-The mock CIAM test-data system consists of:
-
-```text
-Claude / MCP Client
-        │
-        │ MCP / Streamable HTTP
-        ▼
-MCP Server :9000
-        │
-        │ REST / HTTP
-        ▼
-Test Data Service :8090
-        │
-        ▼
-test-data.json
-```
-
-The MCP server exposes:
-
-```text
-find_test_customer
-```
-
-The tool can select synthetic CIAM identities based on attributes such as:
-
-* Scenario
-* Status
-* MFA enabled
-
-Example scenarios include:
-
-```text
-mfa_timeout
-mfa_enrolment
-oauth_invalid_state
-locked_account
-```
-
-All data is synthetic.
-
-No production customer information is required.
-
----
-
-# 11. MCP vs REST API
-
-This project intentionally uses REST underneath the MCP server.
-
-That demonstrates an important architectural distinction:
-
-```text
-REST API
-    =
-application/service integration interface
-
-MCP
-    =
-AI-facing tool interface
-```
-
-The MCP server does not replace the underlying service.
-
-Instead:
-
-```text
-AI Agent
-   │
-   ▼
-MCP
-   │
-   ▼
-Existing service/API
-```
-
-This allows an enterprise to expose carefully selected capabilities to AI agents without redesigning every existing backend service around AI.
-
----
-
-# 12. MCP Gateway vs API Gateway
-
-A production architecture could look like:
-
-```text
-Claude / AI Agent
-        │
-        ▼
-   MCP Gateway
-        │
-        ▼
-   MCP Server
-        │
-        ▼
-   API Gateway
-        │
-        ▼
-   CIAM Service
-        │
-        ▼
-      Data
-```
-
-The responsibilities are different.
-
-### MCP Gateway
-
-Controls AI-agent access to:
-
-* Approved tools
-* Tool versions
-* Agent identity
-* Tool authorization
-* AI-specific policies
-* Tool auditing
-* AI usage/meters
-* Tool routing
-
-### API Gateway
-
-Controls application/API traffic:
-
-* Authentication
-* Authorization
-* Rate limiting
-* Routing
-* API policies
-* Network controls
-* API observability
-
-The MCP layer should not replace conventional API and resource-level security.
-
----
-
-# 13. Production security principle
-
-One of the most important lessons demonstrated by the POC is:
-
-> **Instructions influence AI behaviour; controls enforce security boundaries.**
-
-For example, telling Claude:
-
-```text
-Do not access production customer data.
-```
-
-is not sufficient.
-
-A production system should additionally enforce:
-
-```text
-Claude
-   │
-   ▼
-MCP Gateway
-   │
-   ├── policy
-   ├── authorization
-   └── audit
-   │
-   ▼
-MCP Server
-   │
-   ▼
-API Gateway
-   │
-   ▼
-Production service
-   │
-   ▼
-Resource-level authorization
-```
-
-The downstream resource remains the ultimate security boundary.
-
----
-
-# 14. MCP in GitHub Actions
-
-The repository also demonstrates running the MCP runtime inside a GitHub-hosted CI runner.
-
-This is different from the developer's local MCP server.
-
-A GitHub-hosted runner is ephemeral.
-
-Therefore:
-
-```text
-Workflow A
-    └── MCP server
-
-Workflow B
-    └── does NOT automatically see Workflow A's MCP server
-```
-
-The MCP runtime must either:
-
-### Option 1 — start inside the same workflow
-
-```text
-GitHub Runner
-   │
-   ├── Start REST service
-   ├── Start MCP server
-   ├── Configure .mcp.json
-   └── Run Claude
-```
-
-### Option 2 — use an enterprise-hosted MCP service
-
-```text
-GitHub Runner
-       │
-       ▼
-Claude
-       │
-       ▼
-Enterprise MCP Gateway
-       │
-       ▼
-MCP Servers
-```
-
-Option 1 is demonstrated here as a CI/CD POC.
-
-Option 2 is the more realistic enterprise architecture.
-
----
-
-# 15. Deterministic architecture enforcement
-
-The project uses **ArchUnit** to enforce architecture rules independently of Claude.
-
-Example rule:
-
-```java
-noClasses()
-    .that().resideInAPackage("..api..")
-    .and().haveSimpleNameEndingWith("Controller")
-    .should().dependOnClassesThat()
-    .haveSimpleNameEndingWith("Repository");
-```
-
-A deliberate violation was introduced:
-
-```text
-CustomerController
-       │
-       └── CustomerRepository
-```
-
-ArchUnit correctly failed the build.
-
-After removing the dependency, the build passed again.
-
-This demonstrates:
-
-```text
-AI recommendation
-        ≠
-architecture enforcement
-```
-
-The architecture rule is deterministic.
-
----
-
-# 16. FINOS CALM architecture validation
-
-The repository contains:
-
-```text
-architecture/calm/ciam-system.architecture.json
-```
-
-The CALM architecture is validated using the FINOS CALM CLI.
-
-The CI pipeline runs:
-
-```bash
-calm validate -a ./architecture/calm/ciam-system.architecture.json
-```
-
-A deliberately invalid CALM document was tested by changing the architecture `unique-id` to an invalid value.
-
-The validator failed.
-
-The original model was then restored and validation passed.
-
-This demonstrates architecture-as-code validation independently of AI.
-
----
-
-# 17. Claude Code Hooks
-
-The project contains a Claude Code hook:
-
-```text
-.claude/hooks/block-git-push.js
-```
-
-The hook prevents Claude Code from executing:
-
-```bash
-git push
-```
-
-The hook operates before the tool execution.
-
-Conceptually:
-
-```text
-Claude
-  │
-  ▼
-PreToolUse Hook
-  │
-  ├── git push? ──► DENY
-  │
-  └── otherwise ──► ALLOW
-```
-
-This is stronger than merely telling Claude:
-
-```text
-Never push to Git.
-```
-
-The project therefore demonstrates the difference between:
-
-```text
-Instruction
-    vs
-Tool-level enforcement
-```
-
----
-
-# 18. Hook lifecycle concepts
-
-The project also explores Claude Code hook stages.
-
-Conceptually:
-
-```text
-SessionStart
-      │
-      ▼
-UserPromptSubmit
-      │
-      ▼
-Claude reasoning
-      │
-      ▼
-PreToolUse
-      │
-      ▼
-Tool execution
-      │
-      ▼
-PostToolUse
-      │
-      ▼
-Claude continues
-      │
-      ▼
-PreCompact (if required)
-      │
-      ▼
-Claude continues
-      │
-      ▼
-Stop
-```
-
-Different hooks serve different purposes.
-
-For example:
-
-* `PreToolUse` → prevent or control a tool action
-* `PostToolUse` → inspect what happened
-* `UserPromptSubmit` → validate/classify incoming requests
-* `SessionStart` → initialise context
-* `Stop` → validate completion
-
----
-
-# 19. Golden evaluation dataset
-
-The repository contains:
-
-```text
-evaluation/
-└── golden-dataset/
-```
-
-The dataset contains approved AI evaluation cases.
-
-Example categories:
-
-```text
-security
-architecture
-api-design
-```
-
-Example case:
-
-```text
-SEC-001
-```
-
-tests whether an AI reviewer identifies customer PII being written to application logs.
-
-The expected result includes:
-
-```json
-{
-  "finding": true,
-  "severity": "HIGH",
-  "rule": "CIAM-PII-LOGGING"
-}
-```
-
-Another case tests controller-to-repository architecture violations.
-
-Another tests a valid API change where:
-
-```text
-finding = false
-```
-
-This is important because a good AI evaluator must test both:
-
-```text
-True positive
-False positive
-False negative
-Severity accuracy
-```
-
----
-
-# 20. Evaluation dataset governance
-
-The evaluation dataset follows this lifecycle:
-
-```text
-Developer discovers AI failure
-          │
-          ▼
-      proposed/
-          │
-          ▼
-     Pull Request
-          │
-          ▼
-     Expert review
-          │
-          ▼
- golden-dataset/
-          │
-          ▼
-    Evaluation CI
-```
-
-The golden dataset is treated as a **quality asset**.
-
-It must not be casually changed merely to make an AI system pass.
-
-Ownership is split by expertise:
-
-```text
-AI Platform / AI Engineering
-        │
-        └── Evaluation framework
-
-Security Team
-        │
-        └── Security cases
-
-Architecture Team
-        │
-        └── Architecture cases
-
-API Team
-        │
-        └── API cases
-
-CIAM Domain Experts
-        │
-        └── CIAM-specific cases
-```
-
----
-
-# 21. Evaluation validation
-
-The repository contains:
-
-```text
-evaluation/validate_dataset.py
-```
-
-It validates:
-
-* Required fields
-* Case IDs
-* Expected result structure
-* Boolean finding values
-* Duplicate IDs
-
-A deliberate invalid dataset case was tested by removing the evaluation case ID.
-
-The validator failed.
-
-After restoring the ID, validation passed.
-
-The validation also runs in GitHub Actions.
-
----
-
-# 22. AI evaluation gate
-
-The repository demonstrates an additional evaluation gate.
-
-The flow is:
-
-```text
-Claude Review
-      │
-      ▼
-AI review result
-      │
-      ▼
-Normalization / adapter
-      │
-      ▼
-Structured result
-      │
-      ▼
-Golden expected result
-      │
-      ▼
-Evaluation
-      │
-      ├── PASS
-      └── FAIL
-```
-
-For the current POC, the adapter normalizes the mock Claude review into a structured JSON result.
-
-The evaluator checks:
-
-```text
-finding
-severity
-rule
-```
-
-A deliberate experiment changed:
-
-```text
-HIGH
-```
-
-to:
-
-```text
-LOW
-```
-
-The evaluation correctly failed.
-
-Restoring `HIGH` caused the evaluation to pass.
-
-This demonstrates that an AI-generated review can itself become subject to a quality gate.
-
----
-
-# 23. Important distinction: deterministic CI vs AI evaluation
-
-The project intentionally keeps these separate.
-
-### Deterministic controls
-
-```text
-JUnit
-ArchUnit
-FINOS CALM
-Dataset validation
-SAST
-Dependency scanning
-Secret scanning
-```
-
-These should not depend on an LLM.
-
-### AI-assisted controls
-
-```text
-Security reasoning
-API semantic review
-Architecture semantic review
-Code understanding
-Recommendations
-Natural-language analysis
-```
-
-AI adds semantic reasoning where deterministic rules become difficult or expensive.
-
-The intended architecture is therefore:
-
-```text
-                 CI Pipeline
-                     │
-       ┌─────────────┴─────────────┐
-       │                           │
-Deterministic checks          AI checks
-       │                           │
-       ├── Tests                   ├── Security review
-       ├── ArchUnit                ├── API review
-       ├── CALM                    ├── Architecture review
-       ├── SAST                    └── Recommendations
-       └── Dependency checks
-```
-
----
-
-# 24. Local setup
-
-## Prerequisites
-
-Install:
-
-* Java 21
-* Git
-* Python 3.12+
-* Node.js 22+
-* npm
-* Claude Code
-
-Optional:
-
-* IntelliJ IDEA
-* FINOS CALM CLI
-
----
-
-# 25. Clone the repository
-
-```bash
-git clone https://github.com/sanjivsingh79/claude-ciam-sdlc.git
-cd claude-ciam-sdlc
-```
-
----
-
-# 26. Run the Spring Boot application
-
-Navigate to:
-
-```text
-ciam-api/ciam-api
-```
-
-Windows:
-
-```powershell
-.\gradlew.bat clean test
-```
-
-Run the application:
-
-```powershell
-.\gradlew.bat bootRun
-```
-
-The application exposes the Spring Boot API locally.
-
-Health check:
-
-```text
-GET /actuator/health
-```
-
----
-
-# 27. Run tests
-
-From:
-
-```text
-ciam-api/ciam-api
-```
-
-run:
-
-```powershell
-.\gradlew.bat clean test
-```
-
-This executes:
-
-* Unit tests
-* Controller tests
-* Service tests
-* Repository tests
-* ArchUnit architecture tests
-
----
-
-# 28. Run the architecture validation locally
-
-Install the FINOS CALM CLI if required:
-
-```bash
-npm install -g @finos/calm-cli
-```
-
-Validate:
-
-```bash
-calm validate -a ./architecture/calm/ciam-system.architecture.json
-```
-
-Expected result:
-
-```text
-Architecture validation successful
-```
-
----
-
-# 29. Run the MCP test-data service locally
-
-Install Python dependencies:
-
-```powershell
-python -m pip install -r mock-test-data\requirements.txt
-```
-
-Start the test-data REST service:
-
-```powershell
-cd mock-test-data\service
-python server.py
-```
-
-The service runs on:
-
-```text
-http://127.0.0.1:8090
-```
-
----
-
-# 30. Start the MCP server locally
-
-Open another terminal.
-
-From:
-
-```text
-mock-test-data/mcp-server
-```
-
-run:
-
-```powershell
-python server.py
-```
-
-The MCP server runs on:
-
-```text
-http://127.0.0.1:9000/mcp
-```
-
----
-
-# 31. Test the MCP tool
-
-Open another terminal.
-
-From:
-
-```text
-mock-test-data/mcp-client
-```
-
-run:
-
-```powershell
-python test_client.py
-```
-
-The expected architecture is:
-
-```text
-MCP Client
-    │
-    ▼
-MCP Server :9000
-    │
-    ▼
-REST Test Data Service :8090
-    │
-    ▼
-test-data.json
-```
-
-The client should discover and invoke:
-
-```text
-find_test_customer
-```
-
----
-
-# 32. Use Claude Code locally
-
-From the repository root:
-
-```bash
-claude
-```
-
-Claude Code will discover project-level configuration from:
-
-```text
-CLAUDE.md
-.claude/
-```
-
-The project Skills are available under:
-
-```text
-.claude/skills/
-```
-
-The hooks are configured through:
-
-```text
-.claude/settings.json
-```
-
----
-
-# 33. Example Claude Code workflow
-
-A developer can ask Claude Code to:
-
-```text
-Understand the existing customer registration implementation.
-```
-
-Then:
-
-```text
-Implement the requested customer lookup endpoint.
-```
-
-Then:
-
-```text
-Run the tests.
-```
-
-Then:
-
-```text
-Run the security review.
-```
-
-Then:
-
-```text
-Run the API design review.
-```
-
-Then:
-
-```text
-Run the CALM architecture review.
-```
-
-The important point is that the review Skills are deliberately read-only.
-
----
-
-# 34. Git workflow
-
-A typical developer workflow is:
-
-```text
-Create feature branch
-       │
-       ▼
-Ask Claude to understand change
-       │
-       ▼
-Implement
-       │
-       ▼
-Run tests
-       │
-       ▼
-Run AI reviews
-       │
-       ▼
-Review changes
-       │
-       ▼
-Commit
-       │
-       ▼
-Push
-       │
-       ▼
-Pull Request
-```
-
-The Claude Code hook prevents Claude itself from performing `git push`.
-
-The developer remains responsible for the final Git operation.
-
----
-
-# 35. GitHub Actions CI
-
-The repository contains automated CI.
-
-The pipeline performs:
-
-```text
-Checkout
-   │
-   ├── Java tests
-   │
-   ├── ArchUnit
-   │
-   ├── FINOS CALM validation
-   │
-   └── Evaluation dataset validation
-```
-
-This ensures that AI-assisted development remains subject to conventional engineering quality gates.
-
----
-
-# 36. Claude PR review workflow
-
-The repository also contains a separate workflow for Claude-assisted PR review:
-
-```text
-.github/workflows/claude-review.yml
-```
-
-The intended architecture is:
-
-```text
-GitHub Pull Request
-        │
-        ▼
-Claude Code Action
-        │
-        ├── CLAUDE.md
-        ├── Review Skills
-        ├── Git diff
-        └── MCP tools
-        │
-        ▼
-Claude PR Review
-        │
-        ▼
-Evaluation gate
-```
-
-The Claude workflow is intentionally separated from the normal deterministic CI pipeline.
-
-This allows organizations to control:
-
-* When AI reviews execute
-* Which users can trigger them
-* Which tools Claude can access
-* Which MCP servers are available
-* What permissions the workflow receives
-* How AI results are evaluated
-
----
-
-# 37. Enterprise-scale architecture
-
-The local POC uses:
-
-```text
-Developer
-   │
-   ▼
-Claude Code
-   │
-   ├── CLAUDE.md
-   ├── Skills
-   ├── Agents
-   ├── Hooks
-   └── Local MCP
-```
-
-An enterprise implementation could evolve into:
-
-```text
-                    Enterprise AI Platform
-                             │
-        ┌────────────────────┼────────────────────┐
-        │                    │                    │
-        ▼                    ▼                    ▼
- Enterprise policies      Skill Registry      Evaluation
-        │                    │                    │
-        └────────────────────┼────────────────────┘
-                             │
-                             ▼
-                       Developer
-                             │
-                             ▼
-                        Claude Code
-                             │
-             ┌───────────────┼────────────────┐
-             │               │                │
-             ▼               ▼                ▼
-          Skills          Agents            Hooks
-             │               │
-             └───────────────┤
-                             ▼
-                       MCP Gateway
-                             │
-                 ┌───────────┼───────────┐
-                 │           │           │
-                 ▼           ▼           ▼
-              MCP Tool    MCP Tool    MCP Tool
-                 │           │           │
-                 └───────────┼───────────┘
-                             ▼
-                       API Gateway
-                             │
-                             ▼
-                      Enterprise APIs
-                             │
-                             ▼
-                         Services
-```
-
----
-
-# 38. Governance at scale
-
-For a large engineering organization, AI governance should not depend on every developer manually creating their own rules.
-
-A central platform can provide:
-
-```text
-Enterprise standards
-       │
-       ▼
-Shared Skills
-       │
-       ▼
-Approved agents
-       │
-       ▼
-Approved MCP tools
-       │
-       ▼
-Evaluation datasets
-       │
-       ▼
-CI/CD quality gates
-```
-
-Developers can still contribute domain-specific extensions.
-
-For example:
-
-```text
-Enterprise
- ├── Security Skill
- ├── API Skill
- ├── Architecture Skill
- └── Secure coding rules
-
-CIAM domain
- ├── CIAM security Skill
- ├── CIAM test-data agent
- ├── CIAM MCP tools
- └── CIAM evaluation cases
-```
-
----
-
-# 39. Key architectural lessons
-
-This POC demonstrates several principles.
-
-### 1. AI instructions are not security controls
-
-```text
-CLAUDE.md
-Skills
-Prompts
-```
-
-guide behaviour.
-
-They should not be treated as the final security boundary.
-
----
-
-### 2. Tool access must be governed
-
-MCP introduces a new security boundary.
-
-An enterprise needs:
-
-```text
-Identity
-Authorization
-Approved tools
-Tool versioning
-Audit
-Rate limits
-Policy
-Network controls
-```
-
----
-
-### 3. AI should not replace deterministic engineering controls
-
-Use:
-
-```text
-ArchUnit
-CALM
-JUnit
-SAST
-Dependency scanning
-Secret scanning
-```
-
-where deterministic validation is possible.
-
-Use AI where semantic reasoning provides additional value.
-
----
-
-### 4. Evaluation must be treated as a first-class engineering capability
-
-An AI system can regress after:
-
-```text
-Prompt changes
-Model changes
-Skill changes
-Tool changes
-Context changes
-```
-
-Therefore:
-
-```text
-AI change
-   │
-   ▼
-Evaluation dataset
-   │
-   ▼
-Quality gate
-```
-
-should become part of the engineering lifecycle.
-
----
-
-### 5. MCP is an interface, not the security boundary
-
-The architecture should remain:
-
-```text
-AI
- ↓
-MCP
- ↓
-API
- ↓
-Service
- ↓
-Resource
-```
-
-with authorization enforced at appropriate downstream boundaries.
-
----
-
-# 40. POC status
-
-The repository currently demonstrates:
-
-* [x] Java 21 Spring Boot CIAM application
-* [x] Layered architecture
-* [x] CIAM security rules
-* [x] `CLAUDE.md`
-* [x] User-level Claude Code instructions
-* [x] Claude Code Skills
-* [x] Specialist subagent
-* [x] MCP server
-* [x] MCP client
-* [x] MCP Streamable HTTP
-* [x] Synthetic CIAM test data
-* [x] Local MCP runtime
-* [x] GitHub Actions MCP runtime
-* [x] ArchUnit
-* [x] FINOS CALM architecture-as-code
-* [x] CALM CI validation
-* [x] Claude Code hook
-* [x] Git push protection
-* [x] Golden evaluation dataset
-* [x] Evaluation dataset validation
-* [x] AI result normalization
-* [x] AI evaluation gate
-* [x] GitHub Actions CI
-* [x] Pull Request workflow foundation
-
-The Claude PR review execution itself is intentionally kept separate from the MCP runtime validation so that AI authentication and runtime-tooling concerns can be tested independently.
-
----
-
-# 41. Why this POC exists
-
-This project is intended as a practical demonstration of how organizations can move from:
-
-```text
-"Developers use AI coding assistants"
-```
-
-towards:
-
-```text
-"AI is an integrated, governed software engineering capability."
-```
-
-The objective is to combine:
-
-```text
-Developer productivity
-        +
-Software architecture
-        +
-Security
-        +
-AI governance
-        +
-Evaluation
-        +
-CI/CD
-        +
-Enterprise tool integration
-```
-
-without making the AI system itself the ultimate authority.
-
----
-
-# 42. Recommended next evolution
-
-Potential future enhancements include:
-
-1. Connect the real Claude PR review workflow.
-2. Replace the mock Claude review with live structured AI output.
-3. Expand the evaluation dataset.
-4. Add negative/false-positive evaluation cases.
-5. Add model/prompt A/B evaluation.
-6. Add latency and token-cost measurements.
-7. Add SAST and dependency scanning.
-8. Add secret scanning.
-9. Add MCP Gateway simulation.
-10. Add production-style workload identity.
-11. Add policy-based MCP tool authorization.
-12. Add versioned enterprise Skills.
-13. Add automated evaluation reports to Pull Requests.
-14. Add CIAM-specific coding agents.
-15. Add deployment quality gates.
-
----
-
-## 43. Final architecture
-
-The overall concept demonstrated by this repository is:
-
-```text
-                         ┌───────────────────────┐
-                         │   Enterprise Policy   │
-                         └───────────┬───────────┘
-                                     │
-                                     ▼
-Developer ───────────────► Claude Code
-                              │
-             ┌────────────────┼────────────────┐
-             │                │                │
-             ▼                ▼                ▼
-        CLAUDE.md          Skills          Subagents
-             │                │                │
-             └────────────────┼────────────────┘
-                              │
-                              ▼
-                            Hooks
-                              │
-                              ▼
-                            MCP
-                              │
-                              ▼
-                       Enterprise Tools
-                              │
-                              ▼
-                         Application
-                              │
-                 ┌────────────┼─────────────┐
-                 │            │             │
-                 ▼            ▼             ▼
-              JUnit       ArchUnit       CALM
-                 │            │             │
-                 └────────────┼─────────────┘
-                              │
-                              ▼
-                           GitHub
-                              │
-                              ▼
-                         Pull Request
-                              │
-             ┌────────────────┼────────────────┐
-             │                │                │
-             ▼                ▼                ▼
-       Deterministic      AI Review        Evaluation
-           CI                 │                │
-             │                └───────┬────────┘
-             │                        │
-             └────────────────────────┘
-                              │
-                              ▼
-                         Quality Gate
-                              │
-                              ▼
-                          Deployment
-```
+An experimental engineering project exploring how Claude Code, specialised agents and skills, MCP tools, architecture-as-code, automated pull-request reviews, and deterministic evaluation can improve the software development lifecycle for a Java/Spring Boot Customer Identity and Access Management (CIAM) application.
 
 The central design principle is:
 
-> **AI accelerates engineering work; architecture, security, deterministic controls and evaluation govern what is allowed into the engineering lifecycle.**
+> **Use AI to assist with reasoning and investigation, deterministic engineering controls to enforce rules, and repeatable evaluation to measure whether AI behaviour remains reliable as models and code evolve.**
+
+This repository explores how to integrate AI into an existing engineering discipline rather than treating an LLM as a replacement for conventional software engineering practices.
+
+## Table of contents
+
+- [1. Project objectives](#1-project-objectives)
+- [2. Solution architecture](#2-solution-architecture)
+- [3. Architecture guardrails](#3-architecture-guardrails)
+- [4. Claude Code project instructions](#4-claude-code-project-instructions)
+- [5. Agents, skills, plugins and MCP](#5-agents-skills-plugins-and-mcp)
+- [6. AI-assisted pull-request review](#6-ai-assisted-pull-request-review)
+- [7. Deterministic evaluation and regression testing](#7-deterministic-evaluation-and-regression-testing)
+- [8. Golden evaluation datasets](#8-golden-evaluation-datasets)
+- [9. End-to-end workflows](#9-end-to-end-workflows)
+- [10. Repository structure](#10-repository-structure)
+- [11. Technologies and engineering practices](#11-technologies-and-engineering-practices)
+- [12. Running and validating the project](#12-running-and-validating-the-project)
+- [13. Limitations and future improvements](#13-limitations-and-future-improvements)
+
+## 1. Project objectives
+
+The project explores several complementary ways to introduce AI into a CIAM software delivery lifecycle.
+
+### 1.1 Architecture-aware development
+
+Use conventional architecture tests and machine-readable architecture descriptions to make architectural expectations explicit and reviewable.
+
+### 1.2 Reusable AI engineering guidance
+
+Use Claude Code project instructions, specialised agents, skills, plugins and MCP integrations to provide repeatable development capabilities rather than relying on ad hoc prompts.
+
+### 1.3 AI-assisted pull-request review
+
+Use Claude to inspect code changes and identify potential security, API design and architectural problems as part of a GitHub Actions workflow.
+
+### 1.4 Measurable AI quality
+
+Convert review output into a structured format and evaluate it against predefined expectations. This creates a foundation for regression testing when the model, prompts, agent instructions, tools or application code change.
+
+### 1.5 Controlled autonomy
+
+Combine fixed CI/CD stages and deterministic checks with AI-assisted reasoning where interpretation is useful. Keep the overall process bounded, observable and auditable.
+
+## 2. Solution architecture
+
+The solution combines a conventional Java engineering environment with an AI-assisted development and review layer.
+
+```mermaid
+flowchart TB
+    DEV[Developer]
+    CODE[Java / Spring Boot CIAM Application]
+    CONV[Conventional Engineering Controls]
+    ARCH[ArchUnit Architecture Tests]
+    CALM[FINOS CALM Architecture Descriptions]
+    TEST[Unit Tests and Build Checks]
+
+    CLAUDE[Claude Code]
+    INSTR[CLAUDE.md Project Instructions]
+    AGENTS[Specialised Agents]
+    SKILLS[Reusable Skills]
+    PLUGIN[ciam-test-data Plugin]
+    MCP[MCP Tools and Test-Data Service]
+
+    PR[Pull Request]
+    ACTION[GitHub Actions]
+    REVIEW[Claude PR Review]
+    ADAPT[Review Adapter]
+    EVAL[Deterministic Evaluation]
+    GOLD[Version-Controlled Golden Dataset]
+    ART[Evaluation Results and Artifacts]
+
+    DEV --> CODE
+    CODE --> CONV
+    CONV --> ARCH
+    CONV --> CALM
+    CONV --> TEST
+
+    DEV --> CLAUDE
+    CLAUDE --> INSTR
+    CLAUDE --> AGENTS
+    CLAUDE --> SKILLS
+    CLAUDE --> PLUGIN
+    PLUGIN --> MCP
+
+    CODE --> PR
+    PR --> ACTION
+    ACTION --> REVIEW
+    REVIEW --> ADAPT
+    ADAPT --> EVAL
+    GOLD --> EVAL
+    EVAL --> ART
+```
+
+The diagram represents the logical architecture and intended integration points. The exact set of checks executed in a particular workflow run depends on the configured GitHub Actions job and its conditions.
+
+### Architectural principle: deterministic controls plus AI assistance
+
+Not every engineering task needs an LLM.
+
+| Engineering concern | Preferred mechanism | Reason |
+|---|---|---|
+| Compilation and type correctness | Compiler and build | Deterministic verification |
+| Unit and integration behaviour | Automated tests | Repeatable assertions |
+| Architectural dependency constraints | ArchUnit | Enforceable architectural rules |
+| Architecture documentation | FINOS CALM descriptions | Structured architecture representation |
+| Code-change interpretation | Claude review | Language understanding and contextual reasoning |
+| Test-data discovery | Plugin and MCP tools | Reusable access to a defined capability |
+| Review-output regression | Golden datasets and evaluator | Consistent comparison against known expectations |
+
+Claude complements these controls; it does not replace them.
+
+## 3. Architecture guardrails
+
+### 3.1 ArchUnit
+
+ArchUnit is used to express architectural constraints as executable tests in the Java codebase.
+
+Traditional architecture documentation can become outdated when implementation changes. Architecture tests help make selected rules executable so that violations can be detected during development or CI.
+
+Example architectural constraints include:
+
+- Controllers should not directly depend on persistence repositories.
+- Dependencies should follow the intended package or layer boundaries.
+- Domain and application responsibilities should remain appropriately separated.
+- New code should not introduce prohibited dependencies between layers.
+
+For example, a controller that directly injects a repository can bypass a service or application layer. An architecture test can detect that dependency without requiring Claude to infer whether it is acceptable.
+
+**Why this matters:** Claude can explain the architectural implications of a change, while ArchUnit provides a repeatable pass/fail check for rules that can be encoded.
+
+### 3.2 FINOS CALM
+
+FINOS Common Architecture Language Model (CALM) provides a structured way to represent architecture information in a machine-readable form.
+
+Within this project, CALM is an architectural documentation and governance approach that can complement conventional code and tests.
+
+Architecture descriptions can capture concepts such as:
+
+- System components and their responsibilities.
+- Relationships and communication paths.
+- Interfaces and integration boundaries.
+- Trust boundaries and security-relevant relationships.
+- Architectural context for reviewing changes.
+
+The value is not simply producing another diagram. Structured architecture descriptions can provide a consistent reference for developers, reviewers and automation.
+
+For example, a proposed API change may look correct in isolation but introduce a dependency or communication path that conflicts with the intended system architecture.
+
+### 3.3 Combining ArchUnit and CALM
+
+These approaches address different aspects of architecture governance.
+
+| ArchUnit | FINOS CALM |
+|---|---|
+| Checks selected properties of the implemented Java code | Represents architecture in a structured description |
+| Enforces executable dependency constraints | Documents components, relationships and architectural intent |
+| Produces automated test results | Provides architecture context for people and tooling |
+| Best suited to rules that can be expressed against code | Best suited to representing architecture and its relationships |
+
+They are complementary rather than interchangeable. A CALM description does not automatically enforce a Java dependency rule, and an ArchUnit test does not by itself describe the entire enterprise architecture.
+
+## 4. Claude Code project instructions
+
+### 4.1 What is `CLAUDE.md`?
+
+`CLAUDE.md` is a project-level instruction file that Claude Code can use as context when working in the repository.
+
+It provides persistent project guidance so developers do not have to repeat the same instructions in every prompt.
+
+Depending on the content configured in the repository, it can describe:
+
+- The purpose and structure of the application.
+- Important architectural boundaries.
+- Coding and testing conventions.
+- Security and privacy requirements.
+- Commands used to build, test and validate changes.
+- Expectations for reviewing code and proposing modifications.
+- Instructions for using repository-specific agents, skills and tools.
+
+For a CIAM application, the guidance should emphasise security-sensitive design, including authentication and authorisation boundaries, PII handling, secure logging, API contracts and appropriate tests.
+
+### 4.2 Instructions are not enforcement
+
+`CLAUDE.md` guides Claude; it is not a security boundary.
+
+If a rule must always be enforced, implement it using the appropriate control, such as:
+
+- Automated tests.
+- ArchUnit rules.
+- Static analysis.
+- Build or CI checks.
+- Access controls and tool permissions.
+- Deterministic validation logic.
+
+For example, an instruction can tell Claude not to log customer email addresses. A test, static-analysis rule or other enforceable control can independently detect prohibited logging patterns.
+
+This separation avoids relying on the model to remember and correctly enforce every requirement.
+
+## 5. Agents, skills, plugins and MCP
+
+These mechanisms provide different ways to organise reusable AI capabilities.
+
+### 5.1 Agents
+
+An agent is a specialised AI worker given a defined responsibility and relevant instructions or tools.
+
+Agents are useful when a task benefits from focused context, a specific role or a bounded investigation.
+
+Examples of possible CIAM engineering responsibilities include:
+
+- Reviewing a code change for security issues.
+- Investigating architectural dependencies.
+- Assisting with test-data selection.
+- Helping create or explain tests.
+
+A specialist agent is not automatically a separate model or an autonomous production service. Its behaviour depends on how it is configured and invoked.
+
+### 5.2 Skills
+
+A skill packages reusable instructions and domain-specific guidance for a particular task.
+
+A skill can explain a repeatable procedure, the relevant conventions, the expected inputs and outputs, and the checks that should be performed.
+
+For example, a test-data selection skill can guide Claude through selecting an appropriate synthetic customer scenario before generating a test.
+
+**Difference:** an agent describes a specialised worker or role; a skill describes reusable task knowledge or a procedure. They can be used together.
+
+### 5.3 Plugins
+
+A Claude Code plugin packages reusable capabilities into a distributable unit. Depending on its configuration, a plugin can include agents, skills, MCP configuration and other supported components.
+
+This project includes a `ciam-test-data` plugin intended to support CIAM test-data workflows.
+
+The plugin separates reusable engineering capability from the individual application repository, making it easier to maintain and distribute the same capability across projects.
+
+### 5.4 MCP
+
+The Model Context Protocol (MCP) provides a standard interface through which an AI application can discover and invoke tools exposed by an MCP server.
+
+Rather than asking Claude to invent test data or assume that a customer exists, the application can expose a defined operation such as finding a suitable synthetic test customer.
+
+A simplified flow is:
+
+1. Claude receives a test-generation request.
+2. The relevant agent and skill guide the task.
+3. Claude identifies the need for a test customer.
+4. The configured MCP integration exposes the relevant tool.
+5. The tool returns the available test-data result.
+6. Claude uses the returned information when helping generate the test.
+
+Tool access, input validation, service availability and data handling remain application and infrastructure responsibilities.
+
+### 5.5 Plugin distribution
+
+The plugin development repository and marketplace repository have different roles:
+
+- **Plugin development repository:** `sanjivsingh79/claude-ciam-sdlc-plugin` — the local development directory is `C:\Users\sanji\claude-ciam-sdlc-plugin`. Verify the actual GitHub repository URL before publishing links that depend on it.
+- **Marketplace repository:** `sanjivsingh79/ciam-plugin-marketplace` — contains the marketplace catalog and packaged plugin.
+
+The marketplace catalog references the packaged plugin using a relative path. The packaged copy must be updated when the source plugin changes.
+
+The marketplace distributes the plugin configuration and instructions; it does not automatically deploy external MCP servers or supporting CIAM services.
+
+## 6. AI-assisted pull-request review
+
+The Claude PR Review workflow integrates an AI-assisted review into GitHub Actions.
+
+The goal is to detect and explain potential issues in a proposed code change, then process the resulting review in a structured and testable way.
+
+### 6.1 Review lifecycle
+
+```mermaid
+flowchart TD
+    A[Pull request opened or updated] --> B[GitHub Actions workflow]
+    B --> C[Claude reviews the change]
+    C --> D[Capture Claude review comment]
+    D --> E[Adapt review to structured JSON]
+    E --> F[Evaluate selected findings]
+    F --> G[Publish evaluation artifacts]
+```
+
+This is a logical representation of the configured processing stages. The workflow also needs to handle unsuccessful steps, missing comments and incomplete results.
+
+### 6.2 Why capture and adapt the review?
+
+A human-readable review comment is useful to a developer, but it is not an ideal format for automated comparison.
+
+The review adapter converts the captured output into a structured representation that can be evaluated by code.
+
+Structured findings can contain attributes such as:
+
+- Finding description.
+- Severity.
+- Security or architecture rule.
+- Evidence supporting the finding.
+- Recommendation for remediation.
+
+The adapter helps separate model-generated prose from the data contract expected by the evaluator.
+
+The evaluator should validate the structured result rather than assume that a plausible-looking review is correct.
+
+### 6.3 Workflow resilience
+
+The workflow was adjusted so that capturing the review can run even when the Claude action reports failure, and downstream steps can run when their prerequisites succeed.
+
+This matters because an action may produce a review comment before returning a failure status—for example, when its configured turn limit is exceeded.
+
+The downstream stages should not blindly run without their inputs. The capture, adaptation and evaluation stages therefore use explicit step outcomes to control execution.
+
+A successful evaluation does not necessarily mean the entire GitHub Actions run succeeded. The underlying Claude action may still fail, and that status must be understood separately.
+
+## 7. Deterministic evaluation and regression testing
+
+This is a central part of the project.
+
+LLM output can vary when any of the following changes:
+
+- The model or model version.
+- The system prompt or `CLAUDE.md` instructions.
+- Agent or skill instructions.
+- Tool definitions or MCP behaviour.
+- The application code or context provided to the model.
+- The review prompt, orchestration or workflow configuration.
+
+A successful review on one pull request does not prove that future versions will behave consistently.
+
+### 7.1 Golden datasets
+
+A golden dataset contains predefined, reviewed expectations for known scenarios.
+
+Each case describes the relevant scenario and the expected properties of the result. These expectations are version-controlled so that changes can be reviewed like other engineering assets.
+
+Examples include:
+
+- A security scenario involving PII logging.
+- An architecture scenario involving controller-to-repository dependencies.
+- An API-design scenario involving a customer lookup contract.
+
+The expected result is an engineering reference, not a claim that the LLM must produce exactly the same wording every time.
+
+### 7.2 Evaluation architecture
+
+```mermaid
+flowchart TD
+    PR[Pull request] --> LLM[Claude PR review]
+    LLM --> RAW[Captured review text]
+    RAW --> ADAPTER[Review adapter]
+    ADAPTER --> STRUCT[Structured review JSON]
+
+    STRUCT --> VALIDATE[Schema and dataset validation]
+    GOLD[Version-controlled golden expectations] --> COMPARE[Deterministic evaluator]
+    STRUCT --> COMPARE
+
+    VALIDATE --> COMPARE
+    COMPARE --> RESULT[PASS / FAIL / SKIPPED]
+    RESULT --> REPORT[Evaluation report and artifacts]
+    REPORT --> GATE[Release or regression decision]
+```
+
+The diagram describes the intended evaluation pattern. The exact release-gating policy depends on how evaluation is configured in CI.
+
+### 7.3 What is evaluated?
+
+The current evaluation pattern checks individual properties of a finding rather than comparing entire paragraphs of prose.
+
+For the exercised `SEC-001` case, the evaluator checked:
+
+| Dimension | What it verifies |
+|---|---|
+| Finding | Whether the expected issue is identified |
+| Severity | Whether the assigned severity matches the expectation |
+| Rule | Whether the finding maps to the expected rule |
+| Evidence | Whether supporting evidence is present |
+| Recommendation | Whether a remediation recommendation is present |
+
+Each dimension has an explicit result. The evaluator returns a process exit code that CI can use to distinguish passing from failing evaluations.
+
+This is intentionally more repeatable than asking another LLM whether the first LLM's answer “looks good”.
+
+### 7.4 Why not compare the entire review text?
+
+LLMs can describe the same issue in different words while preserving the underlying meaning. Exact text comparison would flag many harmless wording changes.
+
+Instead, the evaluator operates on structured findings and explicit expectations. This makes it possible to measure specific behaviours while tolerating legitimate variation in phrasing.
+
+The current checks are a useful foundation, not a complete measure of review quality. Further evaluation can include:
+
+- False negatives: expected issues that were missed.
+- False positives: findings raised where no issue exists.
+- Severity misclassification.
+- Incorrect rule mapping.
+- Evidence quality and traceability.
+- Duplicate findings.
+- Recommendation correctness.
+- Coverage across different types of changes.
+
+A complete quality framework needs both positive and negative examples. It should also distinguish an issue that was genuinely absent from one that the model failed to detect.
+
+### 7.5 Regression testing after model or prompt changes
+
+A controlled regression process can be organised as follows:
+
+1. Keep the golden dataset and evaluator under version control.
+2. Record the model, prompt, agent/skill versions and relevant configuration used for a baseline.
+3. Run the same representative scenarios against the candidate version.
+4. Adapt outputs to the same structured schema.
+5. Compare results using deterministic checks.
+6. Report changes in findings, severity, rule mapping and evidence.
+7. Review regressions before promoting the new configuration.
+
+This supports comparisons across model upgrades, prompt revisions, tool changes and application changes.
+
+It does not guarantee that a model will behave identically in production. It gives the team a repeatable way to detect changes against a known set of scenarios before accepting them.
+
+## 8. Golden evaluation datasets
+
+The evaluation assets are organised by scenario category:
+
+```text
+evaluation/
+├── adapt_claude_review.py
+├── evaluate_results.py
+├── validate_dataset.py
+├── schemas/
+│   └── claude-review-result.schema.json
+├── golden-dataset/
+│   ├── security/
+│   │   └── security-pii-logging.json
+│   ├── architecture/
+│   │   └── architecture-controller-repository.json
+│   └── api-design/
+│       └── api-valid-customer-lookup.json
+├── mock-results/
+└── real-results/
+```
+
+The exact contents of the repository should be checked against this illustrative structure before treating it as an exhaustive file inventory.
+
+### Golden dataset versus real review output
+
+These assets serve different purposes:
+
+- **Golden dataset:** expert-approved expected behaviour used as a regression reference.
+- **Mock results:** controlled inputs for testing the adapter and evaluator without a model call.
+- **Real results:** captured outputs from actual review runs, useful for inspecting behaviour and debugging the pipeline.
+
+Real model output should not automatically become golden data. It should be reviewed and approved before being adopted as an expected result.
+
+### Interpreting an evaluation result
+
+A previous PR 2 evaluation reported:
+
+```text
+Evaluation: SEC-001
+finding: PASS
+severity: PASS
+rule: PASS
+evidence_present: PASS
+recommendation_present: PASS
+
+Overall: PASS
+Evaluator exit code: 0
+```
+
+This means the supplied structured finding satisfied the five configured checks for that evaluation.
+
+The run also noted that PR 2 was a related real-PR scenario rather than an exact match for the `SEC-001` code change. That distinction matters: a passing result demonstrates that the checks passed for the supplied data, not that every possible regression has been covered.
+
+## 9. End-to-end workflows
+
+The project explores two related but distinct engineering workflows.
+
+### 9.1 AI-assisted development and test generation
+
+```text
+Developer request
+       |
+       v
+Claude Code + CLAUDE.md
+       |
+       v
+Agent / Skill / Plugin
+       |
+       v
+MCP test-data capability
+       |
+       v
+Synthetic customer test data
+       |
+       v
+Generated or updated tests
+       |
+       v
+Build and test execution
+```
+
+This workflow uses AI to assist with test development while keeping test execution and assertions in conventional engineering tools.
+
+### 9.2 AI-assisted pull-request review
+
+```text
+Pull request
+     |
+     v
+GitHub Actions
+     |
+     v
+Claude review
+     |
+     v
+Capture comment
+     |
+     v
+Adapt to structured JSON
+     |
+     v
+Evaluate against expected behaviour
+     |
+     v
+Report results and retain artifacts
+```
+
+The two workflows can share engineering conventions, repository context and reusable tooling, but they solve different problems.
+
+The plugin supports test-data workflows; the review pipeline examines proposed code changes and evaluates the resulting findings.
+
+## 10. Repository structure
+
+The repository combines application code, architecture assets, Claude Code configuration and evaluation tooling.
+
+An illustrative high-level layout is:
+
+```text
+claude-ciam-sdlc/
+├── CLAUDE.md
+├── .claude/
+│   ├── agents/
+│   ├── skills/
+│   └── settings.json
+├── .claude-plugin/
+├── .mcp.json
+├── .github/
+│   └── workflows/
+│       └── claude-review.yml
+├── evaluation/
+│   ├── adapt_claude_review.py
+│   ├── evaluate_results.py
+│   ├── validate_dataset.py
+│   ├── schemas/
+│   ├── golden-dataset/
+│   ├── mock-results/
+│   └── real-results/
+├── src/
+│   ├── main/
+│   └── test/
+└── README.md
+```
+
+This is a conceptual inventory, not a guaranteed exact tree. Preserve the actual paths and filenames in the repository when updating this document; do not create placeholder directories solely to match the illustration.
+
+## 11. Technologies and engineering practices
+
+The project brings together conventional application engineering and AI-assisted development capabilities.
+
+| Area | Technology or approach |
+|---|---|
+| Application | Java and Spring Boot |
+| Architecture tests | ArchUnit |
+| Architecture description | FINOS CALM |
+| AI-assisted development | Claude Code |
+| Project-level guidance | `CLAUDE.md` |
+| Reusable AI capabilities | Agents and skills |
+| Plugin integration | Claude Code plugins |
+| Tool integration | Model Context Protocol (MCP) |
+| CI/CD | GitHub Actions |
+| Review-output processing | Python adapter and evaluator |
+| Evaluation contracts | JSON Schema |
+| Regression references | Version-controlled golden datasets |
+| Outputs | Evaluation reports and GitHub Actions artifacts |
+
+## 12. Running and validating the project
+
+The exact commands depend on the current checkout, local environment, configured services and workflow inputs. Use the existing project scripts and workflow as the source of truth.
+
+### 12.1 Conventional application checks
+
+Run the application's configured build and tests. Where applicable, include:
+
+- Compilation and unit tests.
+- Integration tests.
+- ArchUnit tests.
+- Any configured static-analysis and security checks.
+
+A passing AI review must not be used as a substitute for these checks.
+
+### 12.2 Validate evaluation assets
+
+Use the repository's dataset validator and schema to check the golden dataset and structured review contracts.
+
+For example, if the scripts expose command-line entry points, inspect their help or usage instructions before invoking them:
+
+```powershell
+python evaluation/validate_dataset.py --help
+python evaluation/evaluate_results.py --help
+```
+
+Use the supported arguments documented by the actual scripts; the examples above are intended to discover their interfaces, not to assert that every script implements a `--help` option.
+
+### 12.3 Test without unnecessary model calls
+
+Use mock review results to exercise the adapter and evaluator first.
+
+This provides a low-cost way to validate:
+
+- Input parsing.
+- JSON structure and schema handling.
+- Expected finding matching.
+- PASS/FAIL behaviour.
+- Exit codes and report generation.
+
+Only run a live Claude review when testing behaviour that cannot be established using deterministic inputs, such as model-generated findings or changes in model behaviour.
+
+### 12.4 Run the GitHub Actions review
+
+The Claude PR Review workflow is defined in:
+
+`.github/workflows/claude-review.yml`
+
+Inspect the workflow's configured trigger and inputs before running it. A live review can consume API usage, and the Claude action may fail independently of later processing stages.
+
+Review the status of each stage separately: Claude execution, comment capture, adaptation, evaluation and artifact upload.
+
+## 13. Limitations and future improvements
+
+This project is an engineering exploration. Its current capabilities should not be confused with a fully production-hardened AI review platform.
+
+Potential improvements include:
+
+1. **Broader evaluation coverage:** add positive and negative golden cases across security, API design and architecture.
+2. **Precision and recall measurement:** track missed expected findings and unsupported findings rather than relying only on individual matching checks.
+3. **Versioned evaluation baselines:** record model identifiers, prompts, agent/skill versions and tool configuration alongside results.
+4. **Quality thresholds:** establish explicit acceptance criteria for candidate model or prompt changes.
+5. **CI release gates:** decide which failures should block a merge and which should produce advisory results.
+6. **Cost and latency tracking:** capture token usage, execution time, tool calls and failures.
+7. **Prompt-injection resilience:** test hostile or misleading instructions contained in code, comments, test fixtures and retrieved content.
+8. **Security and permissions:** apply least privilege to tokens, tools and workflows; keep secrets out of source control.
+9. **Operational resilience:** use bounded retries, timeouts, explicit failure handling and observable execution states.
+10. **Architecture traceability:** connect architecture requirements, CALM descriptions, ArchUnit tests and review rules where a meaningful relationship exists.
+11. **Human review:** retain developer judgement for ambiguous or consequential findings.
+12. **Plugin packaging validation:** verify that the development and marketplace copies remain synchronised and that required MCP services are available.
+
+## Conclusion
+
+The project demonstrates a practical approach to integrating AI into a conventional engineering lifecycle.
+
+Claude Code, agents, skills, plugins and MCP can make development tasks more contextual and reusable. ArchUnit and structured architecture descriptions provide complementary architectural guardrails. GitHub Actions orchestrates the review lifecycle, while deterministic evaluation checks whether the resulting findings meet predefined expectations.
+
+The most important principle is that **AI output should be treated as a candidate result to validate, not as an automatically trusted source of truth**.
+
+By combining AI-assisted reasoning with executable engineering controls and version-controlled regression cases, teams can evolve models, prompts and tools while retaining a repeatable way to detect quality regressions.
