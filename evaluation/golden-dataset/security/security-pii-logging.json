@@ -1,0 +1,17 @@
+{
+  "id": "SEC-001",
+  "category": "security",
+  "scenario": "PII logging",
+  "description": "A customer email address is written directly to application logs.",
+  "code_change": {
+    "file": "src/main/java/com/example/ciam/service/CustomerService.java",
+    "before": "customerRepository.save(customer);",
+    "after": "log.info(\"Created customer {}\", customer.getEmail());\ncustomerRepository.save(customer);"
+  },
+  "expected": {
+    "finding": true,
+    "severity": "HIGH",
+    "rule": "CIAM-PII-LOGGING",
+    "expected_behavior": "Customer email addresses must not be written directly to application logs."
+  }
+}
